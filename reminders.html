@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reminders</title><link rel="stylesheet" href="css/style.css"></head>
+<body><div class="layout"><aside class="sidebar" id="sidebar"></aside><div class="main"><header class="topbar" id="topbar"></header><main class="content">
+<div class="card">
+ <h3>Overdue Rule &amp; Message Queue</h3>
+ <p class="hint">Students with <b>more than 3 unpaid months</b> get a reminder. In offline mode messages wait in the queue and are sent once you go online.</p>
+ <div class="row"><button class="btn warn" id="chk">Check Overdue &amp; Create Reminders</button><button class="btn" id="fl">Send Queued Now</button></div>
+ <p class="msg" id="m"></p>
+</div>
+<div class="stats" id="stats" style="grid-template-columns:repeat(2,1fr)"></div>
+<div class="card"><h3>Message Log</h3><div class="log" id="lg"></div></div>
+</main></div></div><script src="js/app.js"></script>
+<script>
+if(App.page('reminders','Reminders','Automatic overdue notifications')){
+ const S=App.state,E=App.esc;
+ function render(){
+  stats.innerHTML=`<div class="stat warn"><div class="l">Queued (offline)</div><div class="v">${S.queue.length}</div></div><div class="stat ok"><div class="l">Sent</div><div class="v">${S.sent.length}</div></div>`;
+  const all=[...S.queue.map(x=>({...x,t:'Queued'})),...S.sent.map(x=>({...x,t:'Sent'}))].reverse();
+  lg.innerHTML=all.length?all.map(x=>`<div class="log-item"><span class="pill ${x.t==='Sent'?'ok':'warn'}">${x.t}</span> via <b>${E(x.channel)}</b> to <b>${E(x.phone)}</b><br><small>${E(x.text)}</small></div>`).join(''):'<div class="empty">No reminders yet. Click “Check Overdue”.</div>';
+ }
+ chk.onclick=()=>{const r=App.checkOverdue();m.className='msg good';
+  m.textContent=r.created?`${r.created} reminder(s) created${r.sentNow?' and sent':' and queued (offline)'}.`:'No new overdue students to notify.';render();};
+ fl.onclick=()=>{if(!S.isOnline){m.className='msg err';m.textContent='Offline. Switch to online mode first.';return;}
+  const n=App.flush();m.className='msg good';m.textContent=n?`${n} message(s) sent.`:'Queue is empty.';render();};
+ App.onChange=render;render();
+}
+</script></body></html>

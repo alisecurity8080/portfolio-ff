@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Student</title><link rel="stylesheet" href="css/style.css"></head>
+<body><div class="layout"><aside class="sidebar" id="sidebar"></aside><div class="main"><header class="topbar" id="topbar"></header><main class="content">
+<div class="card" style="max-width:760px">
+ <h3 id="ft">Add New Student</h3>
+ <form id="f"><div class="form-grid">
+  <div><label for="n">Student full name</label><input id="n" required maxlength="80" placeholder="e.g. Bilal Ahmed"></div>
+  <div><label for="c">Class / Section</label><input id="c" required maxlength="40" placeholder="e.g. Class 8 - A"></div>
+  <div><label for="p">Guardian phone</label><input id="p" required placeholder="+923001112233"></div>
+  <div><label for="fee">Monthly fee (PKR)</label><input id="fee" type="number" min="100" value="4500" required></div>
+  <div><label for="ch">Reminder channel</label><select id="ch"><option>WhatsApp</option><option>SMS</option></select></div>
+ </div>
+ <label>Fee status (tick the months already paid)</label><div class="checks" id="mc"></div>
+ <p class="msg err" id="m"></p>
+ <div class="row"><button class="btn ok" type="submit" id="sv">Save Student</button><a class="btn ghost" href="students.html">Cancel</a></div></form>
+</div>
+</main></div></div><script src="js/app.js"></script>
+<script>
+if(App.page('students','Student','Add or edit student details')){
+ const S=App.state,id=+new URLSearchParams(location.search).get('id')||0;
+ const stu=id?S.students.find(s=>s.id===id):null;
+ mc.innerHTML=App.MONTHS.map(m=>`<label><input type="checkbox" value="${m}"> ${m}</label>`).join('');
+ if(id&&!stu){ft.textContent='Student not found';f.classList.add('hidden');}
+ if(stu){ft.textContent='Edit Student';sv.textContent='Update Student';n.value=stu.name;c.value=stu.className;p.value=stu.phone;fee.value=stu.monthlyFee;ch.value=stu.channel;
+  mc.querySelectorAll('input').forEach(i=>i.checked=!!stu.months[i.value]);}
+ f.onsubmit=e=>{e.preventDefault();
+  if(!App.validPhone(p.value))return m.textContent='Enter a valid phone number (10–14 digits, optional +).';
+  const months=Object.fromEntries([...mc.querySelectorAll('input')].map(i=>[i.value,i.checked]));
+  const d={name:n.value.trim(),className:c.value.trim(),phone:p.value.replace(/[\s-]/g,''),monthlyFee:Number(fee.value),channel:ch.value,months};
+  if(stu){Object.assign(stu,d);if(!App.isOverdue(stu))S.notified=S.notified.filter(x=>x!==stu.id);}
+  else S.students.push({id:Date.now(),...d});
+  App.save();App.flash(stu?'Student updated':'Student added');location.href='students.html';};
+}
+</script></body></html>

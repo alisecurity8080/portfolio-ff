@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard</title><link rel="stylesheet" href="css/style.css"></head>
+<body><div class="layout"><aside class="sidebar" id="sidebar"></aside><div class="main"><header class="topbar" id="topbar"></header><main class="content">
+<div class="stats" id="stats"></div>
+<div class="grid-2">
+ <div class="card"><div class="card-head"><h3>Overdue Students (&gt; 3 months)</h3><a href="fees.html">View all →</a></div><div class="table-wrap" id="od"></div></div>
+ <div class="card"><div class="card-head"><h3>Recent Reminders</h3><a href="reminders.html">Open →</a></div><div class="log" id="rc"></div></div>
+</div>
+</main></div></div><script src="js/app.js"></script>
+<script>
+if(App.page('dashboard','Dashboard','Overview of fees and reminders')){
+ const S=App.state,E=App.esc;
+ function render(){
+  const od=S.students.filter(App.isOverdue),tot=S.students.reduce((a,s)=>a+App.dues(s),0);
+  stats.innerHTML=[['Total Students',S.students.length,''],['Overdue (3+ months)',od.length,'bad'],['Total Outstanding',App.money(tot),'warn'],['Queued Messages',S.queue.length,'warn'],['Reminders Sent',S.sent.length,'ok']]
+   .map(x=>`<div class="stat ${x[2]}"><div class="l">${x[0]}</div><div class="v">${x[1]}</div></div>`).join('');
+  document.getElementById('od').innerHTML=od.length?`<table><thead><tr><th>Student</th><th>Class</th><th>Unpaid</th><th>Dues</th></tr></thead><tbody>${od.map(s=>`<tr><td><b>${E(s.name)}</b></td><td>${E(s.className)}</td><td>${App.unpaid(s).length}</td><td>${App.money(App.dues(s))}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">No overdue students 🎉</div>';
+  const all=[...S.queue.map(m=>({...m,t:'Queued'})),...S.sent.map(m=>({...m,t:'Sent'}))].slice(-5).reverse();
+  rc.innerHTML=all.length?all.map(m=>`<div class="log-item"><span class="pill ${m.t==='Sent'?'ok':'warn'}">${m.t}</span> ${E(m.channel)} → ${E(m.phone)}<br><small>${E(m.text)}</small></div>`).join(''):'<div class="empty">No reminders yet</div>';
+ }
+ App.onChange=render;render();
+}
+</script></body></html>

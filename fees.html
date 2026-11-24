@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fee Tracker</title><link rel="stylesheet" href="css/style.css"></head>
+<body><div class="layout"><aside class="sidebar" id="sidebar"></aside><div class="main"><header class="topbar" id="topbar"></header><main class="content">
+<div class="card">
+ <div class="card-head"><h3>Monthly Fee Tracker</h3><button class="btn ghost" onclick="window.print()">🖨 Print</button></div>
+ <p class="hint">Click a month to toggle Paid (green) / Due (red).</p>
+ <div class="toolbar"><input id="q" placeholder="Search student…"><select id="fl"><option value="">All students</option><option value="od">Overdue only</option><option value="clear">Fully paid</option></select></div>
+ <div class="table-wrap"><table><thead><tr><th>Student</th><th>Class</th><th>Fee / month</th><th>Months (Jan–Jun)</th><th>Unpaid</th><th>Dues</th><th>Status</th></tr></thead><tbody id="tb"></tbody></table></div>
+</div>
+</main></div></div><script src="js/app.js"></script>
+<script>
+if(App.page('fees','Fee Tracker','Mark monthly payments')){
+ const S=App.state,E=App.esc;
+ function render(){
+  const t=q.value.toLowerCase(),f=fl.value;
+  const l=S.students.filter(s=>s.name.toLowerCase().includes(t)&&(!f||(f==='od'?App.isOverdue(s):App.unpaid(s).length===0)));
+  tb.innerHTML=l.length?l.map(s=>`<tr><td><b>${E(s.name)}</b></td><td>${E(s.className)}</td><td>${App.money(s.monthlyFee)}</td><td>${App.monthPills(s,true)}</td>
+   <td>${App.unpaid(s).length}</td><td>${App.money(App.dues(s))}</td><td><span class="pill ${App.isOverdue(s)?'bad':'ok'}">${App.isOverdue(s)?'3+ Months Alert':'Normal'}</span></td></tr>`).join(''):'<tr><td colspan="7" class="empty">No records</td></tr>';
+ }
+ tb.onclick=e=>{const d=e.target.dataset;if(!d.m)return;App.toggleMonth(+d.id,d.m);render();};
+ q.oninput=render;fl.onchange=render;render();
+}
+</script></body></html>

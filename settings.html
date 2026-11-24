@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Settings</title><link rel="stylesheet" href="css/style.css"></head>
+<body><div class="layout"><aside class="sidebar" id="sidebar"></aside><div class="main"><header class="topbar" id="topbar"></header><main class="content">
+<div class="grid-2">
+ <div class="card"><h3>Admin Account</h3>
+  <label for="ph">Registered phone (for OTP)</label><input id="ph">
+  <label for="np">New password (leave empty to keep)</label><input id="np" type="password" placeholder="At least 6 characters">
+  <button class="btn ok" id="sa">Save Changes</button><p class="msg" id="m1"></p></div>
+ <div class="card"><h3>Data Backup</h3>
+  <p class="hint">Data is stored in this browser only. Export a backup regularly, and import it on another device.</p>
+  <div class="row"><button class="btn" id="ex">Export Backup (.json)</button><button class="btn ghost" id="im">Import Backup</button></div>
+  <input type="file" id="file" accept=".json" class="hidden"><p class="msg" id="m2"></p>
+  <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+  <h3>Reset</h3><p class="hint">Delete all data and restore the 3 sample students.</p>
+  <button class="btn bad" id="rs">Reset Sample Data</button></div>
+</div>
+</main></div></div><script src="js/app.js"></script>
+<script>
+if(App.page('settings','Settings','Account, backup and data')){
+ const S=App.state;ph.value=S.admin.phone;
+ sa.onclick=()=>{if(!App.validPhone(ph.value)){m1.className='msg err';return m1.textContent='Invalid phone number.';}
+  if(np.value&&np.value.length<6){m1.className='msg err';return m1.textContent='Password must be at least 6 characters.';}
+  S.admin.phone=ph.value.replace(/[\s-]/g,'');if(np.value){S.admin.passwordHash=btoa(np.value);np.value='';}
+  App.save();m1.className='msg good';m1.textContent='Saved.';};
+ ex.onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}));
+  a.download='tngi-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();};
+ im.onclick=()=>file.click();
+ file.onchange=()=>{const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.students))throw 0;
+  if(!confirm('Replace current data with this backup?'))return;App.replaceState(d);App.flash('Backup imported');location.reload();}
+  catch{m2.className='msg err';m2.textContent='Invalid backup file.';}};r.readAsText(file.files[0]);};
+ rs.onclick=()=>{if(confirm('Delete all data and restore sample data?')){App.resetData();App.flash('Sample data restored');location.reload();}};
+}
+</script></body></html>
